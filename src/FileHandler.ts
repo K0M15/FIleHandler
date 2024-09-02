@@ -68,7 +68,8 @@ export class FileHandler implements IFileHandler{
         if (parsedPath == undefined)
             return undefined;
         let bufferView = new DataView(await file.arrayBuffer()); 
-        fs.writeFileSync(`${this.settings.storage_directory}/${path}`, bufferView);
+        let options:fs.WriteFileOptions = { flag: writeover?"w": "wx" }
+        fs.writeFileSync(`${this.settings.storage_directory}/${path}`, bufferView, options);
         return path;
     };
 }

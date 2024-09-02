@@ -93,18 +93,18 @@ let storeFile:testFunction = () => {
     let handler = setupFileHandler(`${__dirname}/temp`)
     let buffer = Buffer.alloc(11, "Somestring", "ascii");
     let file = new File([buffer], "testFile");
-    let p = handler.saveFile(file, `${__dirname}/temp/testFile`)
+    let p = handler.saveFile(file, `testFile`)
     if(p != undefined)
         return true;
     return false;
 }
 
 let storeAndReciveFile:testFunction = async () => {
-    let path = `${__dirname}/temp/testFile`
+    let path = `testFile`
     let handler = setupFileHandler(`${__dirname}/temp`)
     let buffer = Buffer.alloc(11, "Somestring", "ascii");
     let file = new File([buffer], "testFile");
-    let p = await handler.saveFile(file, path)
+    let p = await handler.saveFile(file, path, true);
     if(p == undefined)
         return false;
     let f1 = await handler.getFile(path);
