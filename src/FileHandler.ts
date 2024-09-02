@@ -4,7 +4,7 @@ import {
     id
 } from "../../common/types/types";
 
-import * as fs from "fs/promises";
+import * as fs from "fs";
 
 export interface IFileHandlerSettings{
     storage_directory:  string;
@@ -46,41 +46,29 @@ export class FileHandler implements IFileHandler{
     constructor(settings:Partial<IFileHandlerSettings>){
         this.settings = settingsFactory();
         Object.assign(this.settings, settings);
+        if(!fs.existsSync(this.settings.storage_directory)){
+            fs.mkdirSync(this.settings.storage_directory, {recursive:true});
+        }
+    }
+    
+    getFile(path: string){
+        {
+            let parsedPath = filePathFactory(path);
+            if( parsedPath != undefined && fs.existsSync(`${this.settings.storage_directory}/${path}`)){
+                let buffer = fs.readFileSync(`${this.settings.storage_directory}/${path}`);
+                let blob = new File([buffer], (parsedPath as IFilePath).fileName);
+                return blob;
+            }
+            return undefined;
+        }
     }
 
-    async getFile(path: string){
-        return new Promise(
-            (res:(file:File)=>void, rej:(reason:any)=>void) => 
-            {
-                let result_file = undefined;
-                let parsedPath = filePathFactory(path);
-                fs.access(path, fs.constants.F_OK)
-                    .then(() => {
-                        fs.readFile(path).then((val) =>{
-                            let blob = new File([val], (parsedPath as IFilePath).fileName);
-                            res(blob);
-                        }).catch(rej);
-                    })
-                    .catch(rej);
-                return result_file;
-            }
-        )
-    }
-
-    saveFile(file: File, path:string, writeover = false){
-        return new Promise(
-            (res:(path:string)=>void, rej:(reason:any)=>void) => 
-            {
-                let parsedPath = filePathFactory(path);
-                if (parsedPath == undefined)
-                    rej("Path not parseable");
-                file.arrayBuffer()
-                    .then((arrBuff) => {
-                        fs.writeFile(path, new DataView(arrBuff, 8, file.size))
-                            .then(() => {res(path)})
-                            .catch(rej);
-                    }).catch(rej);
-            }
-        )
+    async saveFile(file: File, path:string, writeover = false): Promise<string | undefined>{
+        let parsedPath = filePathFactory(path);
+        if (parsedPath == undefined)
+            return undefined;
+        let bufferView = new DataView(await file.arrayBuffer()); 
+        fs.writeFileSync(`${this.settings.storage_directory}/${path}`, bufferView);
+        return path;
     };
 }

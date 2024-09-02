@@ -2,9 +2,9 @@ export type id = string;
 
 export interface IFileHandler{
     saveFile:   
-        (file:File, path:string, writeover: boolean | undefined)
-                                =>  Promise<string>;
-    getFile:    (path:string)   =>  Promise<File>;
+        (file:File, path:string, writeover?: boolean)
+                                =>  Promise<string | undefined>;
+    getFile:    (path:string)   =>  File | undefined;
 }
 
 

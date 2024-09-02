@@ -3,7 +3,9 @@ import {
     id
 } from "../../common/types/types";
 
-import * as fs from "fs/promises";
+import {} from "os";
+
+import * as fs from "fs";
 import * as fh from "../src/FileHandler";
 import { ITest, ITestResult, test_array} from "./test";
 
@@ -72,71 +74,44 @@ function setupFileHandler(dir:string){
 }
 
 let testNonExistantFile:testFunction = () =>{
-    return new Promise(
-        (res:(val:boolean)=>void, rej:((reason:any)=>void)) =>
-        {
-            let handler = setupFileHandler('./temp/');
-            handler.getFile('test.ts')
-                .then((file) => res(false))
-                .catch(() => res(true));
-        }
-    )
+    let handler = setupFileHandler('./temp/');
+    let file = handler.getFile('test.ts');
+    if (file == undefined)
+        return true;
+    return false;
 }
 
 let testExistingFile:testFunction = () =>{
-    return new Promise(
-        (res:(val:boolean)=>void, rej:((reason:any)=>void)) =>
-        {
-            let handler = setupFileHandler(`${__dirname}/test/temp`)
-            handler.getFile('main.ts')
-                .then((val) => {
-                    res(true);
-                })
-                .catch(()=> res(false))
-        }
-    )
+    let handler = setupFileHandler(`${__dirname}`)
+    let file = handler.getFile('main.ts');
+    if( file != undefined )
+        return true;
+    return false;
 }
 
 let storeFile:testFunction = () => {
-    return new Promise(
-        (res:(val:boolean)=>void, rej:((reason:any)=>void)) =>
-        {
-            let handler = setupFileHandler(`${__dirname}/test/temp`)
-            let buffer = Buffer.alloc(11, "Somestring", "ascii");
-            let file = new File([buffer], "testFile");
-            handler.saveFile(file, `${__dirname}/test/temp/testFile`)
-            .then((path) => {
-                if(path == `${__dirname}/test/temp/testFile`)
-                    res(true);
-                res(false);
-            })
-            .catch(()=> res(false));
-        }
-    )
+    let handler = setupFileHandler(`${__dirname}/temp`)
+    let buffer = Buffer.alloc(11, "Somestring", "ascii");
+    let file = new File([buffer], "testFile");
+    let p = handler.saveFile(file, `${__dirname}/temp/testFile`)
+    if(p != undefined)
+        return true;
+    return false;
 }
 
-let storeAndReciveFile:testFunction = () => {
-    return new Promise(
-        (res:(val:boolean)=>void, rej:((reason:any)=>void)) =>
-        {
-            let handler = setupFileHandler(`${__dirname}/test/temp`)
-            let buffer = Buffer.alloc(11, "Somestring", "ascii");
-            let file = new File([buffer], "testFile");
-            handler.saveFile(file, `${__dirname}/test/temp/testFile`)
-            .then((path) => {
-                if(path == `${__dirname}/test/temp/testFile`)
-                    handler.getFile(`${__dirname}/test/temp/testFile`)
-                        .then((file) => {
-                            file.arrayBuffer()
-                                .then((buffer) => {
-                                    console.log(buffer);
-                                    res(true);
-                                })
-                        }).catch(() => res(false));
-            })
-            .catch(()=> res(false));
-        }
-    )
+let storeAndReciveFile:testFunction = async () => {
+    let path = `${__dirname}/temp/testFile`
+    let handler = setupFileHandler(`${__dirname}/temp`)
+    let buffer = Buffer.alloc(11, "Somestring", "ascii");
+    let file = new File([buffer], "testFile");
+    let p = await handler.saveFile(file, path)
+    if(p == undefined)
+        return false;
+    let f1 = await handler.getFile(path);
+    let f2 = await handler.getFile(p);
+    if(f1?.size == f2?.size)
+        return true;
+    return false;
 }
 
 export class test_handler implements ITest{
