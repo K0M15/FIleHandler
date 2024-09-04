@@ -3,7 +3,6 @@ import {
     id
 } from "../../common/types/types";
 
-import {} from "os";
 
 import * as fs from "fs";
 import * as fh from "../src/FileHandler";
@@ -102,7 +101,7 @@ let storeFile:testFunction = () => {
 let storeAndReciveFile:testFunction = async () => {
     let path = `testFile`
     let handler = setupFileHandler(`${__dirname}/temp`)
-    let buffer = Buffer.alloc(11, "Somestring", "ascii");
+    let buffer = Buffer.alloc(17, "Some other string", "ascii");
     let file = new File([buffer], "testFile");
     let p = await handler.saveFile(file, path, true);
     if(p == undefined)

@@ -55,9 +55,16 @@ export class FileHandler implements IFileHandler{
         {
             let parsedPath = filePathFactory(path);
             if( parsedPath != undefined && fs.existsSync(`${this.settings.storage_directory}/${path}`)){
-                let buffer = fs.readFileSync(`${this.settings.storage_directory}/${path}`);
-                let blob = new File([buffer], (parsedPath as IFilePath).fileName);
-                return blob;
+                let buffer:Buffer;
+                try{
+                    buffer = fs.readFileSync(`${this.settings.storage_directory}/${path}`);
+                    let blob = new File([buffer], (parsedPath as IFilePath).fileName);
+                    return blob;
+                }
+                catch(e){
+                    console.error(`Could not read file, reason: ${e}`);
+                    return undefined
+                }
             }
             return undefined;
         }
@@ -69,7 +76,17 @@ export class FileHandler implements IFileHandler{
             return undefined;
         let bufferView = new DataView(await file.arrayBuffer()); 
         let options:fs.WriteFileOptions = { flag: writeover?"w": "wx" }
-        fs.writeFileSync(`${this.settings.storage_directory}/${path}`, bufferView, options);
-        return path;
+        try{
+            await fs.promises.writeFile(`${this.settings.storage_directory}/${path}`, bufferView, options);
+            return path;
+        }catch(e){
+            if (e instanceof Error){
+                if (e.name != "EEXIST" && writeover)
+                {
+                    console.error(`Could not write file, reason ${e}`);
+                    return undefined;
+                }
+            }
+        }
     };
 }
